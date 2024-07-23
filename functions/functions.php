@@ -1,8 +1,8 @@
 <?php
-
+// Configurações globais
 $baseUrl = 'https://cdpj-sandbox.partners.uatinter.co';
-   $certPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Certificado.crt';
-    $keyPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Chave.key';
+$certPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Certificado.crt';
+$keyPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Chave.key';
 $clientId = '9cdbd5c4-9558-4b3b-b2e1-f0adec36c19c';
 $clientSecret = '65eb947b-5385-45dd-b9c3-3270d2afb55e';
 $cc = 'x-conta-corrente: xpto';
@@ -104,7 +104,7 @@ function enviarCobranca($token) {
     if ($response === false) {
         $error = curl_error($ch);
         curl_close($ch);
-        throw new Exception('Erro ao enviar cobrança: ' . $error.'<br>');
+        throw new Exception('Erro ao enviar cobrança: ' . $error . '<br>');
     }
     curl_close($ch);
 
@@ -112,7 +112,7 @@ function enviarCobranca($token) {
     if (isset($data->codigoSolicitacao)) {
         return $data->codigoSolicitacao; // Retorna o código de solicitação para ser usado na função baixarPdf
     } else {
-        throw new Exception('Cobrança não enviada. Resposta: ' . $response.'<br>');
+        throw new Exception('Cobrança não enviada. Resposta: ' . $response . '<br>');
     }
 }
 
@@ -132,7 +132,7 @@ function listarCobrancas($token) {
     $auth = 'Authorization: Bearer ' . $token;
     $json = 'Content-Type: application/json';
 
-        // Construir a URL final
+    // Construir a URL final
     $url = "$baseUrl/cobranca/v3/cobrancas?" . $queryString;
 
     // Exibir a URL para depuração
@@ -154,10 +154,49 @@ function listarCobrancas($token) {
     curl_close($ch);
 
     if ($error !== '') {
-        throw new Exception('Erro ao listar cobranças: ' . $error.'<br>');
+        throw new Exception('Erro ao listar cobranças: ' . $error . '<br>');
     }
 
     return $result;
+}
+
+function cancelarCobranca($bearerToken, $codigoSolicitacao) {
+    global $certPath, $keyPath, $cc;
+
+    $auth = 'Authorization: Bearer ' . $bearerToken;
+    $json = 'Content-Type: application/json';
+
+    $data = json_encode([
+        "motivoCancelamento" => "ACERTOS"
+    ]);
+
+    $url = "https://cdpj-sandbox.partners.uatinter.co/cobranca/v3/cobrancas/$codigoSolicitacao/cancelar";
+    
+    $ch = curl_init();
+    curl_setopt($ch, CURLOPT_URL, $url);
+    curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+    curl_setopt($ch, CURLOPT_SSLVERSION, CURL_SSLVERSION_TLSv1_2);
+    curl_setopt($ch, CURLOPT_HTTPHEADER, [$auth, $cc, $json]);
+    curl_setopt($ch, CURLOPT_SSLCERT, $certPath);
+    curl_setopt($ch, CURLOPT_SSLKEY, $keyPath);
+    curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+
+    $result = curl_exec($ch);
+    if ($result === false) {
+        $error = curl_error($ch);
+        curl_close($ch);
+        throw new Exception('Erro ao cancelar cobrança: ' . $error);
+    }
+
+    curl_close($ch);
+
+    $response = json_decode($result, true);
+    if (json_last_error() !== JSON_ERROR_NONE) {
+        throw new Exception('Erro ao decodificar resposta JSON: ' . json_last_error_msg());
+    }
+
+    return $response;
 }
 
 function baixarPdf($bearerToken, $codigoSolicitacao) {
@@ -220,5 +259,4 @@ function baixarPdf($bearerToken, $codigoSolicitacao) {
     
     return "PDF baixado e forçado o download: $filePath";
 }
-
 ?>
