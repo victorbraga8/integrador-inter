@@ -1,14 +1,13 @@
 <?php
 
-// Configurações globais
 $baseUrl = 'https://cdpj-sandbox.partners.uatinter.co';
-$certPath = __DIR__ . '/certificados/Sandbox_InterAPI_Certificado.crt';
-$keyPath = __DIR__ . '/certificados/Sandbox_InterAPI_Chave.key';
+   $certPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Certificado.crt';
+    $keyPath = __DIR__ . '/../certificados/Sandbox_InterAPI_Chave.key';
 $clientId = '9cdbd5c4-9558-4b3b-b2e1-f0adec36c19c';
 $clientSecret = '65eb947b-5385-45dd-b9c3-3270d2afb55e';
 $cc = 'x-conta-corrente: xpto';
 
-// Função para obter o token
+
 function obterToken() {
     global $baseUrl, $certPath, $keyPath, $clientId, $clientSecret;
 
@@ -41,8 +40,6 @@ function obterToken() {
         throw new Exception('Token não obtido. Resposta: ' . $response);
     }
 }
-
-// Função para enviar a cobrança
 
 function enviarCobranca($token) {
     global $baseUrl, $certPath, $keyPath, $cc;
@@ -222,58 +219,6 @@ function baixarPdf($bearerToken, $codigoSolicitacao) {
     unlink($filePath);
     
     return "PDF baixado e forçado o download: $filePath";
-}
-
-
-
-
-
-
-// Supondo que $data seja o resultado da chamada listarCobrancas()
-$token = "53d8e7c1-ee01-4327-9895-5160df45682c";
-
-baixarPdf($token, "238ab1a9-5bac-4b9a-ad48-95cd3a11fdce");
-// Chamar a função e obter o JSON como string
-$jsonString = listarCobrancas($token);
-
-// Decodificar o JSON para um array associativo
-$dataArray = json_decode($jsonString, true);
-
-
-// Verificar se a decodificação foi bem-sucedida
-if (json_last_error() === JSON_ERROR_NONE) {
-    // Iterar sobre cada cobrança
-    foreach ($dataArray['cobrancas'] as $cobranca) {
-        // Exibir detalhes da cobrança
-        echo "<h2>Cobrança</h2>";
-        echo "<p>Código de Solicitação: " . htmlspecialchars($cobranca['cobranca']['codigoSolicitacao']) . "</p>";
-        echo "<p>Seu Número: " . htmlspecialchars($cobranca['cobranca']['seuNumero']) . "</p>";
-        echo "<p>Situação: " . htmlspecialchars($cobranca['cobranca']['situacao']) . "</p>";
-        echo "<p>Data da Situação: " . htmlspecialchars($cobranca['cobranca']['dataSituacao']) . "</p>";
-        echo "<p>Data de Emissão: " . htmlspecialchars($cobranca['cobranca']['dataEmissao']) . "</p>";
-        echo "<p>Data de Vencimento: " . htmlspecialchars($cobranca['cobranca']['dataVencimento']) . "</p>";
-        echo "<p>Valor Nominal: " . htmlspecialchars($cobranca['cobranca']['valorNominal']) . "</p>";
-        echo "<p>Tipo de Cobrança: " . htmlspecialchars($cobranca['cobranca']['tipoCobranca']) . "</p>";
-
-        // Exibir detalhes do pagador
-        echo "<h3>Pagador</h3>";
-        echo "<p>Nome: " . htmlspecialchars($cobranca['cobranca']['pagador']['nome']) . "</p>";
-        echo "<p>CPF/CNPJ: " . htmlspecialchars($cobranca['cobranca']['pagador']['cpfCnpj']) . "</p>";
-
-        // Exibir detalhes do boleto
-        echo "<h3>Boleto</h3>";
-        echo "<p>Linha Digitável: " . htmlspecialchars($cobranca['boleto']['linhaDigitavel']) . "</p>";
-        echo "<p>Código de Barras: " . htmlspecialchars($cobranca['boleto']['codigoBarras']) . "</p>";
-
-        // Exibir detalhes do PIX
-        echo "<h3>PIX</h3>";
-        echo "<p>PIX Copia e Cola: " . htmlspecialchars($cobranca['pix']['pixCopiaECola']) . "</p>";
-        echo "<p>TXID: " . htmlspecialchars($cobranca['pix']['txid']) . "</p>";
-
-        echo "<hr>"; // Linha horizontal para separar as cobranças
-    }
-} else {
-    echo "Erro ao decodificar JSON: " . json_last_error_msg();
 }
 
 ?>
